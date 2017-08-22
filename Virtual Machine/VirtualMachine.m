@@ -10,6 +10,115 @@
 #import "VirtualMachineAssembler.h"
 
 
+int getRawBigFromInst( VMInstruction inst )
+{
+	int rawBig = 0;
+	uint8_t *bytes = (uint8_t*) &rawBig;
+	bytes[ 0 ] = inst.load.opcode << 3;
+	switch( inst.load.opcode )
+	{
+		case opLoad:
+		case opStore:
+		case opJump:
+		case opJumpEQZ:
+		case opJumpNEQZ:
+		case opJumpLTZ:
+		case opJumpGTZ:
+			bytes[ 0 ] += (inst.load.pack & 0x0E) >> 1;
+			bytes[ 1 ] = ((inst.load.pack & 0x01) << 7) + ((inst.load.absolute & 0x01) << 6) + ((inst.load.reg & 0x1F) << 1) + (inst.load.op_is_address & 0x01);
+			bytes[ 2 ] = (inst.load.addr & 0xFF00) >> 8;
+			bytes[ 3 ] = inst.load.addr & 0x00FF;
+			break;
+		case opLoadi:
+			bytes[ 0 ] += (inst.loadi.pack & 0x38) >> 3;
+			bytes[ 1 ] = ((inst.loadi.pack & 0x0E) << 5) + (inst.loadi.reg & 0x1F);
+			bytes[ 2 ] = (inst.loadi.val & 0xFF00) >> 8;
+			bytes[ 3 ] = inst.loadi.val & 0x00FF;
+			break;
+		case opMove:
+		case opAdd:
+		case opSub:
+		case opMul:
+		case opDiv:
+		case opMod:
+		case opCmp:
+			bytes[ 0 ] += (inst.reg.pack & 0xE00) >> 9;
+			bytes[ 1 ] = (inst.reg.pack & 0x1FE) >> 1;
+			bytes[ 2 ] = ((inst.reg.pack & 0x01) << 7) + ((inst.reg.source1 & 0x1F) << 2) + ((inst.reg.source2 & 0x18) >> 3);
+			bytes[ 3 ] = ((inst.reg.source2 & 0x07) << 5) + (inst.reg.dest & 0x1F);
+			break;
+		case opSpecial:
+		case opLoadPC:
+		case opFinalOp:
+			bytes[ 0 ] += (inst.special.pack >> 15) & 0x07;
+			bytes[ 1 ] = (inst.special.pack >> 7) & 0xFF;
+			bytes[ 2 ] = ((inst.special.pack & 0x7F) << 1) + ((inst.special.specialopcode & 0x08) >> 3);
+			bytes[ 3 ] = ((inst.special.specialopcode & 0x07) << 5) + (inst.special.reg & 0x1F);
+			break;
+		case opNop:
+		default:
+			rawBig = CFSwapInt32HostToBig( inst.raw );
+			bytes[ 0 ] &= 0x07;
+			bytes[ 0 ] += inst.load.opcode << 3;
+	}
+	return rawBig;
+}
+
+
+VMInstruction getInstFromRawBig( int rawBig )
+{
+	VMInstruction inst = { .raw = 0 };
+	const uint8_t *bytes = (const uint8_t*) &rawBig;
+	memset( &inst, 0, sizeof(VMInstruction) );
+	inst.load.opcode = (bytes[ 0 ] & 0xF8) >> 3;
+	switch( inst.load.opcode )
+	{
+		case opLoad:
+		case opStore:
+		case opJump:
+		case opJumpEQZ:
+		case opJumpNEQZ:
+		case opJumpLTZ:
+		case opJumpGTZ:
+			inst.load.pack = ((bytes[ 0 ] & 0x07) << 1) + ((bytes[ 1 ] & 0x80) >> 7);
+			inst.load.absolute = (bytes[ 1 ] & 0x40) ? 1 : 0;
+			inst.load.reg = (bytes[ 1 ] & 0x3E) >> 1;
+			inst.load.op_is_address = bytes[ 1 ] & 0x01;
+			inst.load.addr = (bytes[ 2 ] * 256L) + bytes[ 3 ];
+			break;
+		case opLoadi:
+			inst.loadi.pack = ((bytes[ 0 ] & 0x07) << 3) + ((bytes[ 1 ] & 0xE0) >> 5);
+			inst.loadi.reg = bytes[ 1 ] & 0x1F;
+			inst.loadi.val = (bytes[ 2 ] * 256L) + bytes[ 3 ];
+			break;
+		case opMove:
+		case opAdd:
+		case opSub:
+		case opMul:
+		case opDiv:
+		case opMod:
+		case opCmp:
+			inst.reg.pack = (((int)(bytes[ 0 ] & 0x07)) << 9) + (((int)bytes[ 1 ]) << 1) + ((bytes[ 2 ] & 0x80) >> 7);
+			inst.reg.source1 = (bytes[ 2 ] & 0x7C) >> 2;
+			inst.reg.source2 = ((bytes[ 2 ] & 0x03) << 3) + ((bytes[ 3 ] & 0xE0) >> 5);
+			inst.reg.dest = bytes[ 3 ] & 0x1F;
+			break;
+		case opSpecial:
+		case opLoadPC:
+		case opFinalOp:
+			inst.special.pack = (((int)(bytes[ 0 ] & 0x07)) << 15) + (((int)bytes[ 1 ]) << 7) + ((bytes[ 2 ] & 0xFE) >> 1);
+			inst.special.specialopcode = ((bytes[ 2 ] & 0x01) << 3) + ((bytes[ 3 ] & 0xE0) >> 5);
+			inst.special.reg = bytes[ 3 ] & 0x1F;
+			break;
+		case opNop:
+		default:
+			inst.raw = CFSwapInt32BigToHost( rawBig );
+			inst.load.opcode = (bytes[ 0 ] & 0xF8) >> 3;
+	}
+	return inst;
+}
+
+
 @implementation VirtualMachine
 
 /*enum {
@@ -68,7 +177,7 @@
 	[self setMemory:[data bytes] length:[data length]/sizeof(VMInstruction)];
 }
 
-- (NSData *)data
+- (NSMutableData *)data
 {
 	return [NSMutableData dataWithBytes:memory length:memlength * sizeof(VMInstruction)];
 }
@@ -136,9 +245,19 @@
 				}
 
 				if(inst.opcode == opLoad)
-					_r[(inst.reg % VM_NUM_REGS)] = _memory[location].raw;
+					#ifdef __LITTLE_ENDIAN__
+						_r[(inst.reg % VM_NUM_REGS)] = CFSwapInt32BigToHost(getRawBigFromInst( _memory[location] ));
+					#else
+						_r[(inst.reg % VM_NUM_REGS)] = _memory[location].raw;
+					#endif
+
 				else if(inst.opcode == opStore)
-					_memory[location].raw = _r[(inst.reg % VM_NUM_REGS)];
+					#ifdef __LITTLE_ENDIAN__
+						_memory[location] = getInstFromRawBig(CFSwapInt32HostToBig( _r[(inst.reg % VM_NUM_REGS)] ));
+					#else
+						_memory[location].raw = _r[(inst.reg % VM_NUM_REGS)];
+					#endif
+
 				else
 				{
 					if(		inst.opcode == opJump
@@ -166,10 +285,28 @@
 				_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = _r[(_memory[_PC].reg.source1 % VM_NUM_REGS)] * _r[(_memory[_PC].reg.source2 % VM_NUM_REGS)];
 				break;
 			case opDiv:
-				_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = _r[(_memory[_PC].reg.source1 % VM_NUM_REGS)] / _r[(_memory[_PC].reg.source2 % VM_NUM_REGS)];
+				{
+					int divisor = _r[(_memory[_PC].reg.source2 % VM_NUM_REGS)];
+					if( divisor )
+					{
+						long long numerator = _r[(_memory[_PC].reg.source1 % VM_NUM_REGS)];
+						_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = numerator / divisor;
+					}
+					else
+						_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = 0;
+				}
 				break;
 			case opMod:
-				_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = _r[(_memory[_PC].reg.source1 % VM_NUM_REGS)] % _r[(_memory[_PC].reg.source2 % VM_NUM_REGS)];
+				{
+					int divisor = _r[(_memory[_PC].reg.source2 % VM_NUM_REGS)];
+					if( divisor )
+					{
+						long long numerator = _r[(_memory[_PC].reg.source1 % VM_NUM_REGS)];
+						_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = numerator % divisor;
+					}
+					else
+						_r[(_memory[_PC].reg.dest % VM_NUM_REGS)] = _r[(_memory[_PC].reg.source1 % VM_NUM_REGS)];
+				}
 				break;
 			case opCmp:
 				if(_r[(_memory[_PC].reg.source1 % VM_NUM_REGS)] < _r[(_memory[_PC].reg.source2 % VM_NUM_REGS)])
@@ -212,9 +349,30 @@
 {
 	[coder encodeConditionalObject:notifyObject forKey:@"notifyObject"];
 	[coder encodeObject:NSStringFromSelector(notifySEL) forKey:@"notifySELString"];
+
+#ifdef __LITTLE_ENDIAN__
+	// Save with big-endian bit packing.
+	unsigned int *big_endian = malloc( memlength * sizeof(unsigned int) );
+	size_t i = 0;
+	for( ; i < memlength; i ++ )
+		big_endian[ i ] = getRawBigFromInst( memory[ i ] );
+	[coder encodeBytes:(void *)big_endian length:memlength*sizeof(unsigned int) forKey:@"memoryBytes"];
+	free( big_endian );
+#else
 	[coder encodeBytes:(void *)memory length:memlength*sizeof(VMInstruction) forKey:@"memoryBytes"];
+#endif
+
 	[coder encodeInt:PC forKey:@"PC"];
+
+#ifdef __LITTLE_ENDIAN__
+	big_endian = malloc( sizeof(r) );
+	for( i = 0; i < sizeof(r) / sizeof(int); i ++ )
+		big_endian[ i ] = CFSwapInt32HostToBig( r[ i ] );
+	[coder encodeBytes:(void *)big_endian length:sizeof(r) forKey:@"rbytes"];
+	free( big_endian );
+#else
 	[coder encodeBytes:(void *)r length:sizeof(r) forKey:@"rbytes"];
+#endif
 }
 
 - initWithCoder:(NSCoder *)coder
@@ -225,21 +383,35 @@
 	notifyIMP = [notifyObject methodForSelector:notifySEL];
 #endif
 	
-	unsigned templen;
-	VMInstruction *temp = (void *)[coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen];
+	unsigned int templen = 0;
+	//const VMInstruction *temp = [coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen bytesPerItem:sizeof(VMInstruction)];
+	const unsigned int *temp = (const void*)[coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen];
+
 	if(memory)
 		free(memory);
 	memory = malloc(templen);
-	memcpy(memory, temp, templen);
 	memlength = templen/sizeof(VMInstruction);
+
+	size_t i = 0;
+#ifdef __LITTLE_ENDIAN__
+	// Load from big-endian bit packing.
+	for( ; i < memlength; i ++ )
+		memory[ i ] = getInstFromRawBig( temp[ i ] );
+#else
+	memcpy( memory, temp, templen );
+#endif
 
 	PC = [coder decodeIntForKey:@"PC"];
 
-	int rlen;
-	int *rtemp = (void *)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
+	unsigned int rlen = 0;
+	//const int *rtemp = [coder decodeBytesForKey:@"rbytes" returnedLength:&rlen bytesPerItem:sizeof(int)];
+	const int *rtemp = (const void*)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
+
 	if(sizeof(r) < rlen)
 		rlen = sizeof(r);
-	memcpy(r, rtemp, rlen);
+	//memcpy(r, rtemp, rlen);
+	for( i = 0; i < rlen / sizeof(int); i ++ )
+		r[ i ] = CFSwapInt32BigToHost( rtemp[ i ] );
 
 	return self;
 }

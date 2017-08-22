@@ -203,6 +203,8 @@ NSString * const CreatureNewArenaCreatedNotification = @"CreatureNewArenaCreated
 	NSTimeInterval interval = 0;
 	if(displayInterval < 0)
 		interval = (1 << (-displayInterval - 1))/30.0; // -1 is 1/30th of a sec, -2 is 1/15th, etc.
+	else
+		interval = 1. / ((1 << displayInterval)*60.0);
 
 	[stepTimer invalidate];
 	stepTimer = [NSTimer timerWithTimeInterval:interval target:self selector:@selector(step) userInfo:nil repeats:YES];

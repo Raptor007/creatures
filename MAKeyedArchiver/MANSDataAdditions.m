@@ -22,14 +22,14 @@
 	
 	[outData setLength:destLen]; // truncate to what's used
 	
-	unsigned sourceLength = [self length];
+	unsigned sourceLength = CFSwapInt32HostToBig([self length]);
 	[outData appendBytes:&sourceLength length:sizeof(sourceLength)]; // we need the original length, so stick it on the end
 	return outData;
 }
 
 - (NSData *)zlibDecompressed
 {
-	uLongf originalLength = *((int *)([self bytes] + [self length] - 4));
+	uLongf originalLength = CFSwapInt32BigToHost(*((int *)([self bytes] + [self length] - 4)));
 	NSMutableData *outData = [NSMutableData dataWithLength:originalLength];
 	if(uncompress([outData mutableBytes], &originalLength, [self bytes], [self length] - 4) != Z_OK)
 		return nil;

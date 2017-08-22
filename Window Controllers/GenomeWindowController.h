@@ -32,6 +32,6 @@
 - (void)showParent:sender;
 - (void)showDisassembly:sender;
 - (void)showCOG:sender;
-- (void)setColor:sender;
+- (void)setColor:(NSColorWell *)sender;
 
 @end

@@ -631,7 +631,7 @@ static int SortFunction(id a, id b, void *context)
 
 - initWithCoder:(NSCoder *)coder
 {
-	//parent = [coder decodeObjectForKey:@"parent"];
+	parent = [coder decodeObjectForKey:@"parent"];
 	if([coder containsValueForKey:@"children"])
 		children = [[coder decodeObjectForKey:@"children"] retain];
 	[children makeObjectsPerformSelector:@selector(setParent:) withObject:self];

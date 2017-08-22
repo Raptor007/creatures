@@ -32,6 +32,8 @@
 
 - initFromDefaults
 {
+	// Commented out because unarchiveObjectWithData sometimes hangs in release builds!
+	/*
 	NSData *libraryData = [[NSUserDefaults standardUserDefaults] objectForKey:@"GenomeLibrary"];
 	if(libraryData)
 	{
@@ -42,6 +44,8 @@
 	{
 		library = [[NSMutableSet alloc] init];
 	}
+	*/
+	library = [[NSMutableSet alloc] init];
 	return self;
 }
 

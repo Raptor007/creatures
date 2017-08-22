@@ -10,17 +10,19 @@
 
 void EncodePixel24(Pixel24 p, NSCoder *coder)
 {
-	[coder encodeValueOfObjCType:@encode(int) at:&p.r];
-	[coder encodeValueOfObjCType:@encode(int) at:&p.g];
-	[coder encodeValueOfObjCType:@encode(int) at:&p.b];
+	int r = CFSwapInt32HostToBig(p.r << 24), g = CFSwapInt32HostToBig(p.g << 24), b = CFSwapInt32HostToBig(p.b << 24);
+	[coder encodeValueOfObjCType:@encode(int) at:&r];
+	[coder encodeValueOfObjCType:@encode(int) at:&g];
+	[coder encodeValueOfObjCType:@encode(int) at:&b];
 }
 
 Pixel24 DecodePixel24(NSCoder *coder)
 {
-	Pixel24 p;
-	[coder decodeValueOfObjCType:@encode(int) at:&p.r];
-	[coder decodeValueOfObjCType:@encode(int) at:&p.g];
-	[coder decodeValueOfObjCType:@encode(int) at:&p.b];
+	int r = 0, g = 0, b = 0;
+	[coder decodeValueOfObjCType:@encode(int) at:&r];
+	[coder decodeValueOfObjCType:@encode(int) at:&g];
+	[coder decodeValueOfObjCType:@encode(int) at:&b];
+	Pixel24 p = { .r = CFSwapInt32BigToHost(r) >> 24, .g = CFSwapInt32BigToHost(g) >> 24, .b = CFSwapInt32BigToHost(b) >> 24 };
 	return p;
 }
 

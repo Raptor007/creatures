@@ -82,6 +82,7 @@ extern NSString * const CreatureNewArenaCreatedNotification;
 - (void)mouseUpAtPoint:(NSPoint)p;*/
 
 - (IBAction)toggleRun:(id)sender;
+- (void)stopRun:sender;
 - (IBAction)removeOldGenomes:sender;
 - (IBAction)setDisplayInterval:sender;
 - (void)setGenomeList:list;
@@ -90,6 +91,7 @@ extern NSString * const CreatureNewArenaCreatedNotification;
 - (void)runningUpdate;
 - (void)update;
 - (IBAction)update:sender;
+- (BOOL)askForSave;
 - (void)newArenaOK:sender;
 - (void)newArenaCancel:sender;
 - (IBAction)new:sender;

@@ -47,6 +47,7 @@ int LengthOfType(const char *type);
 - (void)encodeFloat:(float)realv forKey:(NSString *)key;
 - (void)encodeDouble:(double)realv forKey:(NSString *)key;
 - (void)encodeBytes:(const uint8_t *)bytesp length:(unsigned)lenv forKey:(NSString *)key;
+- (void)encodeBytes:(const uint8_t *)bytesp length:(unsigned)lenv forKey:(NSString *)key bytesPerItem:(size_t)bpi;
 
 - (void)finishEncoding;
 

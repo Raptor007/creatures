@@ -75,6 +75,8 @@ typedef union {
 	int raw;
 } VMInstruction;
 
+int getRawBigFromInst( VMInstruction inst );
+VMInstruction getInstFromRawBig( int rawBig );
 
 #define VM_NUM_REGS 32
 #define VM_REG_MASK (0x1F)

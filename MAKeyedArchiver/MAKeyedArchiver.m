@@ -119,10 +119,11 @@ int LengthOfType(const char *type)
 
 - (void)_encodeData:(const uint8_t *)bytes length:(unsigned)len forKey:(NSString *)key
 {
-	int stringIndex = [stringTable indexOfString:key];
+	int stringIndex = CFSwapInt32HostToBig([stringTable indexOfString:key]);
 	[archive appendBytes:&stringIndex length:sizeof(stringIndex)];
 
-	[archive appendBytes:&len length:sizeof(len)];
+	unsigned len_big = CFSwapInt32HostToBig(len);
+	[archive appendBytes:&len_big length:sizeof(len_big)];
 	[archive appendBytes:bytes length:len];
 }
 
@@ -229,8 +230,8 @@ int LengthOfType(const char *type)
 
 - (void)encodeObject:(id)obj forKey:(NSString *)key
 {
-	unsigned stringOffset = [stringTable indexOfString:key];
-	unsigned len = 4;
+	unsigned stringOffset = CFSwapInt32HostToBig([stringTable indexOfString:key]);
+	unsigned len = CFSwapInt32HostToBig(4);
 	[archive appendBytes:&stringOffset length:sizeof(stringOffset)];
 	[archive appendBytes:&len length:sizeof(len)];
 	
@@ -241,7 +242,7 @@ int LengthOfType(const char *type)
 		return;
 	}
 	
-	unsigned offset = [objectOffsetTable offsetOfObject:obj];
+	unsigned offset = CFSwapInt32HostToBig([objectOffsetTable offsetOfObject:obj]);
 	if(offset)
 		[archive appendBytes:&offset length:sizeof(offset)];
 	else
@@ -255,7 +256,7 @@ int LengthOfType(const char *type)
 		}
 		// either way, add a pointer to this offset, and append something boring to the data
 		[delayedEncodesTable push:MAMakeObjectOffsetPair(obj, [archive length])];
-		unsigned temp = 0xdeadbeef;
+		unsigned temp = CFSwapInt32HostToBig(0xdeadbeef);
 		[archive appendBytes:&temp length:sizeof(temp)];
 	}
 }
@@ -263,8 +264,8 @@ int LengthOfType(const char *type)
 - (void)encodeConditionalObject:(id)obj forKey:(NSString *)key
 {
 	// note this and move on...
-	unsigned stringOffset = [stringTable indexOfString:key];
-	unsigned len = 4;
+	unsigned stringOffset = CFSwapInt32HostToBig([stringTable indexOfString:key]);
+	unsigned len = CFSwapInt32HostToBig(4);
 	[archive appendBytes:&stringOffset length:sizeof(stringOffset)];
 	[archive appendBytes:&len length:sizeof(len)];
 
@@ -278,31 +279,58 @@ int LengthOfType(const char *type)
 
 - (void)encodeBool:(BOOL)arg forKey:(NSString *)key
 {
+#ifdef __LITTLE_ENDIAN__
+	if( sizeof(BOOL) == 4 )
+		arg = CFSwapInt32HostToBig(arg);
+	else if( sizeof(BOOL) == 8 )
+		arg = CFSwapInt64HostToBig(arg);
+#endif
 	ENCODE_BODY;
 }
 
 - (void)encodeInt:(int)arg forKey:(NSString *)key
 {
+#ifdef __LITTLE_ENDIAN__
+	arg = CFSwapInt32HostToBig(arg);
+#endif
 	ENCODE_BODY;
 }
 
 - (void)encodeInt32:(int32_t)arg forKey:(NSString *)key
 {
+#ifdef __LITTLE_ENDIAN__
+	arg = CFSwapInt32HostToBig(arg);
+#endif
 	ENCODE_BODY;
 }
 
 - (void)encodeInt64:(int64_t)arg forKey:(NSString *)key
 {
+#ifdef __LITTLE_ENDIAN__
+	arg = CFSwapInt64HostToBig(arg);
+#endif
 	ENCODE_BODY;
 }
 
-- (void)encodeFloat:(float)arg forKey:(NSString *)key
+- (void)encodeFloat:(float)arg_host forKey:(NSString *)key
 {
+#ifdef __LITTLE_ENDIAN__
+	CFSwappedFloat32 raw = CFConvertFloat32HostToSwapped(arg_host);
+	uint32_t arg = raw.v;
+#else
+	float arg = arg_host;
+#endif
 	ENCODE_BODY;
 }
 
-- (void)encodeDouble:(double)arg forKey:(NSString *)key
+- (void)encodeDouble:(double)arg_host forKey:(NSString *)key
 {
+#ifdef __LITTLE_ENDIAN__
+	CFSwappedFloat64 raw = CFConvertFloat64HostToSwapped(arg_host);
+	uint64_t arg = raw.v;
+#else
+	double arg = arg_host;
+#endif
 	ENCODE_BODY;
 }
 
@@ -311,10 +339,46 @@ int LengthOfType(const char *type)
 	[self _encodeData:bytesp length:lenv forKey:key];
 }
 
+- (void)encodeBytes:(const uint8_t *)bytesp length:(unsigned)lenv forKey:(NSString *)key  bytesPerItem:(size_t)bpi;
+{
+	if( bpi == 2 )
+	{
+		uint8_t *temp = malloc( lenv );
+		memset( temp, 0, lenv );
+		size_t i = 0;
+		for( ; i < lenv; i += bpi )
+			*((short*)(temp + i)) = CFSwapInt16HostToBig( *((short*)(bytesp + i)) );
+		[self _encodeData:temp length:lenv forKey:key];
+		free( temp );
+	}
+	else if( bpi == 4 )
+	{
+		uint8_t *temp = malloc( lenv );
+		memset( temp, 0, lenv );
+		size_t i = 0;
+		for( ; i < lenv; i += bpi )
+			*((int*)(temp + i)) = CFSwapInt32HostToBig( *((int*)(bytesp + i)) );
+		[self _encodeData:temp length:lenv forKey:key];
+		free( temp );
+	}
+	else if( bpi == 8 )
+	{
+		uint8_t *temp = malloc( lenv );
+		memset( temp, 0, lenv );
+		size_t i = 0;
+		for( ; i < lenv; i += bpi )
+			*((long long*)(temp + i)) = CFSwapInt64HostToBig( *((long long*)(bytesp + i)) );
+		[self _encodeData:temp length:lenv forKey:key];
+		free( temp );
+	}
+	else
+		[self _encodeData:bytesp length:lenv forKey:key];
+}
+
 - (void)finishEncoding
 {
 	// stick the -1 on the end of the 'root object'
-	int minusOne = -1;
+	int minusOne = CFSwapInt32HostToBig(-1);
 	[archive appendBytes:&minusOne length:sizeof(minusOne)];
 	
 	while(![encodeStack isEmpty])
@@ -346,7 +410,7 @@ int LengthOfType(const char *type)
 		}
 
 		NSString *classString = NSStringFromClass(class);
-		int classOffset = [classTable indexOfString:classString];
+		int classOffset = CFSwapInt32HostToBig([classTable indexOfString:classString]);
 		[archive appendBytes:&classOffset length:sizeof(classOffset)];
 		
 		curNonkeyedIndex = 0; // this has to be reset every time we encode a new object
@@ -364,7 +428,7 @@ int LengthOfType(const char *type)
 		else
 			[obj encodeWithCoder:self]; // encode *everything*, whee
 		
-		int minusOne = -1;
+		//int minusOne = CFSwapInt32HostToBig(-1);
 		[archive appendBytes:&minusOne length:sizeof(minusOne)]; // end with minus one
 	}
 	
@@ -373,32 +437,32 @@ int LengthOfType(const char *type)
 	while(![delayedEncodesTable isEmpty])
 	{
 		ObjectOffsetPair pair = [delayedEncodesTable pop];
-		int *pointer = [archive mutableBytes] + pair.offset;
-		if(*pointer != 0 && *pointer != 0xdeadbeef) // these are the only two pre-existing values it can have
+		unsigned int *pointer = [archive mutableBytes] + pair.offset;
+		if(*pointer != 0 && CFSwapInt32BigToHost(*pointer) != 0xdeadbeef) // these are the only two pre-existing values it can have
 		{
 			MyErrorLog(@"MAKeyedArchiver internal consistency failure; while writing a delayed object, an unexpected value was encountered at the write location");
 		}
-		*pointer = [objectOffsetTable offsetOfObject:pair.obj]; // if it still hasn't been encoded, this will return nil, which is just what we want in that case
+		*pointer = CFSwapInt32HostToBig([objectOffsetTable offsetOfObject:pair.obj]); // if it still hasn't been encoded, this will return nil, which is just what we want in that case
 	}
 	
 	// lastly, write out the string table and class table
 	NSEnumerator *enumerator;
 	NSString *str;
 
-	int *classTableOffset = [archive mutableBytes];
-	*classTableOffset = [archive length];
+	unsigned int *classTableOffset = [archive mutableBytes];
+	*classTableOffset = CFSwapInt32HostToBig([archive length]);
 	
 	enumerator = [[classTable strings] objectEnumerator];
 	while((str = [enumerator nextObject]))
 	{
-		int nameIndex = [stringTable indexOfString:str];
-		int version = [NSClassFromString(str) version];
+		unsigned int nameIndex = CFSwapInt32HostToBig([stringTable indexOfString:str]);
+		int version = CFSwapInt32HostToBig([NSClassFromString(str) version]);
 		[archive appendBytes:&nameIndex length:sizeof(nameIndex)];
 		[archive appendBytes:&version length:sizeof(version)];
 	}
 
-	int *stringTableOffset = [archive mutableBytes] + 4;
-	*stringTableOffset = [archive length];
+	unsigned int *stringTableOffset = [archive mutableBytes] + 4;
+	*stringTableOffset = CFSwapInt32HostToBig([archive length]);
 	
 	enumerator = [[stringTable strings] objectEnumerator];
 	while((str = [enumerator nextObject]))
@@ -410,8 +474,8 @@ int LengthOfType(const char *type)
 	NSData *compressedData = [archive zlibCompressed];
 	NSMutableData *returnData = [NSMutableData dataWithLength:MD5_DIGEST_LENGTH + 4];
 	// save magic cookie
-	int *magicCookieOffset = [returnData mutableBytes] + MD5_DIGEST_LENGTH;
-	*magicCookieOffset = 'MAkA';
+	unsigned int *magicCookieOffset = [returnData mutableBytes] + MD5_DIGEST_LENGTH;
+	*magicCookieOffset = CFSwapInt32HostToBig('MAkA');
 	
 	// save MD5
 	MD5([compressedData bytes], [compressedData length], [returnData mutableBytes]);

@@ -38,6 +38,7 @@
 - (float)decodeFloatForKey:(NSString *)key;
 - (double)decodeDoubleForKey:(NSString *)key;
 - (const uint8_t *)decodeBytesForKey:(NSString *)key returnedLength:(unsigned *)lengthp;
+- (const uint8_t *)decodeBytesForKey:(NSString *)key returnedLength:(unsigned *)lengthp bytesPerItem:(size_t)bpi;
 
 - (void)finishDecoding;
 

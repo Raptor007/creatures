@@ -11,6 +11,7 @@
 #import "MAKeyedArchiver.h"
 #import "MAObjectStack.h"
 #import "MANSDataAdditions.h"
+#import <CoreFoundation/CFByteOrder.h>
 
 
 /*
@@ -131,11 +132,11 @@
 {
 	int stringOffset;
 	id context = [[MAKeyedUnarchiverContext alloc] init];
-	while( (stringOffset = *((int *)([archive bytes] + offset))) != -1) // -1 means stop
+	while( (stringOffset = CFSwapInt32BigToHost(*((int *)([archive bytes] + offset)))) != -1) // -1 means stop
 	{
 		NSString *key = [stringTable objectAtIndex:stringOffset];
 		offset += 4; // get past string index
-		int length = *((int *)([archive bytes] + offset));
+		int length = CFSwapInt32BigToHost(*((int *)([archive bytes] + offset)));
 		length &= 0x0FFFFFFF; // top four bits are reserved, mask them off
 		offset += 4; // get past length
 		
@@ -156,7 +157,7 @@
 		return 0;
 	int offset = [context offsetForKey:key];
 	memcpy( ((void *)&val) + (sizeof(val) - len), [archive bytes] + offset, len);
-	return val;
+	return CFSwapInt64BigToHost(val);
 }
 
 - (double)_decodeDoubleTypeForKey:(NSString *)key
@@ -167,9 +168,25 @@
 	if(len == 0)
 		return 0.0;
 	else if(len == 4)
-		return *((float *)([archive bytes] + offset));
+	{
+#ifdef __LITTLE_ENDIAN__
+		CFSwappedFloat32 raw;
+		raw.v = *((unsigned int *)([archive bytes] + offset));
+		return CFConvertFloat32SwappedToHost(raw);
+#else
+		return *((float*)([archive bytes] + offset));
+#endif
+	}
 	else if(len == 8)
-		return *((double *)([archive bytes] + offset));
+	{
+#ifdef __LITTLE_ENDIAN__
+		CFSwappedFloat64 raw;
+		raw.v = *((unsigned long long *)([archive bytes] + offset));
+		return CFConvertFloat64SwappedToHost(raw);
+#else
+		return *((double*)([archive bytes] + offset));
+#endif
+	}
 	else
 	{
 		MyErrorLog(@"bad floating-point size %d", len);
@@ -213,10 +230,10 @@
 		if([data length] < MD5_DIGEST_LENGTH + 4)
 			BAD_DATA_ABORT;
 		const int *magicCookie = [data bytes] + MD5_DIGEST_LENGTH;
-		if(*magicCookie != 'MAkA')
+		if(CFSwapInt32BigToHost(*magicCookie) != 'MAkA')
 			BAD_DATA_ABORT;
 		NSData *compressedData = [data subdataWithRange:NSMakeRange(MD5_DIGEST_LENGTH + 4, [data length] - MD5_DIGEST_LENGTH - 4)];
-		char md5[MD5_DIGEST_LENGTH];
+		unsigned char md5[MD5_DIGEST_LENGTH];
 		MD5([compressedData bytes], [compressedData length], md5);
 		if(memcmp(md5, [data bytes], MD5_DIGEST_LENGTH) != 0) // MD5 doesn't match
 			BAD_DATA_ABORT;			
@@ -231,9 +248,8 @@
 		classDictionary = [[NSMutableDictionary alloc] init];
 		objectDictionary = [[NSMutableDictionary alloc] init];
 		
-		int classTableOffset = *((int *)([archive bytes]));
-		int stringTableOffset = *((int *)([archive bytes] + 4));
-		int offset;
+		int classTableOffset = CFSwapInt32BigToHost(*((int *)([archive bytes])));
+		int stringTableOffset = CFSwapInt32BigToHost(*((int *)([archive bytes] + 4)));
 		
 		if(classTableOffset >= [archive length] || stringTableOffset >= [archive length])
 		{
@@ -242,7 +258,7 @@
 		
 		
 		// load the string table first, we need it to make the class table
-		offset = stringTableOffset;
+		int offset = stringTableOffset;
 		while(offset < [archive length])
 		{
 			[stringTable addObject:[NSString stringWithUTF8String:[archive bytes] + offset]];
@@ -253,8 +269,8 @@
 		offset = classTableOffset;
 		while(offset < stringTableOffset)
 		{
-			int classStringIndex = *((int *)([archive bytes] + offset));
-			int classVersion = *((int *)([archive bytes] + offset + 4));
+			int classStringIndex = CFSwapInt32BigToHost(*((int *)([archive bytes] + offset)));
+			int classVersion = CFSwapInt32BigToHost(*((int *)([archive bytes] + offset + 4)));
 			NSString *className = [stringTable objectAtIndex:classStringIndex];
 			id classRep = [MAKeyedUnarchiverClass classWithClass:NSClassFromString(className) version:classVersion];
 			[classTable addObject:classRep];
@@ -345,7 +361,7 @@
 	{
 		MyErrorLog(@"bad length");
 	}
-	int objectOffset = *((int *)([archive bytes] + offset));
+	int objectOffset = CFSwapInt32BigToHost(*((int *)([archive bytes] + offset)));
 	
 	// if it's nil, return nil
 	if(objectOffset == 0) return nil;
@@ -354,7 +370,7 @@
 	id obj = [objectDictionary objectForKey:[NSNumber numberWithInt:objectOffset]];
 	if(obj) return obj;
 	
-	int classIndex = *((int *)([archive bytes] + objectOffset));
+	int classIndex = CFSwapInt32BigToHost(*((int *)([archive bytes] + objectOffset)));
 	Class class = [[classTable objectAtIndex:classIndex] repClass];
 	[self pushContextForDataAtOffset:objectOffset + 4]; // skip the class info
 	
@@ -428,6 +444,41 @@
 	if(lengthp)
 		*lengthp = len;
 	return [[archive subdataWithRange:NSMakeRange(offset, len)] bytes];
+}
+
+- (const uint8_t *)decodeBytesForKey:(NSString *)key returnedLength:(unsigned *)lengthp bytesPerItem:(size_t)bpi
+{
+	id context = [contextStack peek];
+	int offset = [context offsetForKey:key];
+	int len = [context lengthForKey:key];
+	if(lengthp)
+		*lengthp = len;
+	const uint8_t *raw = [[archive subdataWithRange:NSMakeRange(offset, len)] bytes];
+	if( bpi == 2 )
+	{
+		uint8_t *temp = malloc( len );
+		size_t i = 0;
+		for( ; i < len; i += bpi )
+			*((short*)(temp + i)) = CFSwapInt16BigToHost( *((short*)(raw + i)) );
+		return temp;
+	}
+	else if( bpi == 4 )
+	{
+		uint8_t *temp = malloc( len );
+		size_t i = 0;
+		for( ; i < len; i += bpi )
+			*((int*)(temp + i)) = CFSwapInt32BigToHost( *((short*)(raw + i)) );
+		return temp;
+	}
+	else if( bpi == 8 )
+	{
+		uint8_t *temp = malloc( len );
+		size_t i = 0;
+		for( ; i < len; i += bpi )
+			*((long long*)(temp + i)) = CFSwapInt64BigToHost( *((short*)(raw + i)) );
+		return temp;
+	}
+	return raw;
 }
 
 - (void)finishDecoding

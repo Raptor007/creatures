@@ -142,7 +142,7 @@ static NSString *trapStrings[] = {
 			if(inst.load.op_is_address)
 				return [NSString stringWithFormat:@"%@\t%d", str, inst.load.addr];
 			else
-				return [NSString stringWithFormat:@"%@\tr%d", str, inst.load.addr & VM_REG_MASK];
+				return [NSString stringWithFormat:@"%@\tr%d", str, (inst.load.addr & VM_REG_MASK)];
 			break;
 		}
 		case opJumpEQZ:
@@ -158,7 +158,7 @@ static NSString *trapStrings[] = {
 			if(inst.load.op_is_address)
 				return [NSString stringWithFormat:@"%@\t%d", str, inst.load.addr];
 			else
-				return [NSString stringWithFormat:@"%@\tr%d", str, inst.load.addr & VM_REG_MASK];
+				return [NSString stringWithFormat:@"%@\tr%d", str, (inst.load.addr & VM_REG_MASK)];
 			break;
 		}
 		case opJump:
@@ -171,7 +171,7 @@ static NSString *trapStrings[] = {
 			if(inst.load.op_is_address)
 				return [NSString stringWithFormat:@"%@\t%d", str, inst.load.addr];
 			else
-				return [NSString stringWithFormat:@"%@\tr%d", str, inst.load.addr & VM_REG_MASK];
+				return [NSString stringWithFormat:@"%@\tr%d", str, (inst.load.addr & VM_REG_MASK)];
 			break;
 		}
 		case opLoadi:
@@ -196,7 +196,11 @@ static NSString *trapStrings[] = {
 			return [NSString stringWithFormat:@"%@\tr%d", opString, inst.special.reg];
 			break;
 		default:
-			return [NSString stringWithFormat:@"%@\t%d", opString, inst.raw];
+			#ifdef __LITTLE_ENDIAN__
+				return [NSString stringWithFormat:@"%@\t%d", opString, CFSwapInt32BigToHost(getRawBigFromInst(inst))];
+			#else
+				return [NSString stringWithFormat:@"%@\t%d", opString, inst.raw];
+			#endif
 			break;
 	}
 }
@@ -477,7 +481,11 @@ static NSString *trapStrings[] = {
 			if(token == nil)
 				curLineInstruction.loadi.opcode = opNop;
 			else
-				curLineInstruction.raw = [self convertToNumber:token];
+				#ifdef __LITTLE_ENDIAN__
+					curLineInstruction = getInstFromRawBig(CFSwapInt32HostToBig([self convertToNumber:token]));
+				#else
+					curLineInstruction.raw = [self convertToNumber:token];
+				#endif
 		}
 
 
@@ -638,7 +646,7 @@ static NSString *trapStrings[] = {
 			else
 			{
 				int val = [self convertToNumber:token];
-				if(val > (2 << 16) - 1 || val < -(2 << 16))
+				if(val > 32767 || val < -32768)
 				{
 					[self recordError:[NSString stringWithFormat:NSLocalizedString(@"%d is out of range (must be between -32768 and 32767)", @"Assembler error"), val]];
 					[self nextLine];
@@ -749,7 +757,6 @@ static NSString *trapStrings[] = {
 		/*
 		 --------------- special opcode end -------------
 		 */
-		
 		
 		else
 		{

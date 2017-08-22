@@ -19,6 +19,10 @@
 	controller = c;
 }
 
+// Just to stop Xcode from complaining; the real implementations are in CreaturesView.
+- (void)zoomIn:sender { zoomFactor *= 2; }
+- (void)zoomOut:sender { zoomFactor /= 2; }
+
 - (void)centerInView:(int)x :(int)y
 {
 	NSPoint point = NSMakePoint(x, (pixHeight - y - 1));
