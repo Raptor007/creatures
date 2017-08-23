@@ -14,6 +14,7 @@
 #import "MAObjectOffsetStack.h"
 #import "MAObjectStack.h"
 #import "MANSDataAdditions.h"
+#import <CoreFoundation/CFByteOrder.h>
 
 
 /*

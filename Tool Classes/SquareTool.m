@@ -26,6 +26,9 @@
 
 	[GUIObject setImage:squareToolImage];
 	[GUIObject setImagePosition:NSImageOnly];
+	
+	// Select this tool at startup.
+	[controller changeTool:2];
 }
 
 - (void)unregisterTrackingRect

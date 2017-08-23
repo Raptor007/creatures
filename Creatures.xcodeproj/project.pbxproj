@@ -96,11 +96,9 @@
 		C29E01F00546DBE700B0215B /* help_language_reference.html in Resources */ = {isa = PBXBuildFile; fileRef = C28FAD0804DBC07600A800F6 /* help_language_reference.html */; };
 		C29E01F10546DBE700B0215B /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = C28FAD0B04DBED0600A800F6 /* index.html */; };
 		C29E01F20546DBE700B0215B /* screenshot.png in Resources */ = {isa = PBXBuildFile; fileRef = C28FAD0D04DBED2100A800F6 /* screenshot.png */; };
-		C29E01F30546DBE700B0215B /* index.html in Resources */ = {isa = PBXBuildFile; fileRef = C27E7B1C04E3E22C00A800F6 /* index.html */; };
 		C29E01F40546DBE700B0215B /* Creatures.icns in Resources */ = {isa = PBXBuildFile; fileRef = C203017104F42A5F00A800F6 /* Creatures.icns */; };
 		C29E01F50546DBE700B0215B /* creatureinspectorwindow.png in Resources */ = {isa = PBXBuildFile; fileRef = C2C0C21705375316000001C9 /* creatureinspectorwindow.png */; };
 		C29E01F60546DBE700B0215B /* Creatures.png in Resources */ = {isa = PBXBuildFile; fileRef = C243A19F05380D95000001C9 /* Creatures.png */; };
-		C29E01F70546DBE700B0215B /* Creatures.png in Resources */ = {isa = PBXBuildFile; fileRef = C243A1A105380DAA000001C9 /* Creatures.png */; };
 		C29E01F80546DBE700B0215B /* ErrorPanel.nib in Resources */ = {isa = PBXBuildFile; fileRef = C243A1A305381585000001C9 /* ErrorPanel.nib */; };
 		C29E01FB0546DBE700B0215B /* EnterRegistration.nib in Resources */ = {isa = PBXBuildFile; fileRef = C2442376053DC919000001C9 /* EnterRegistration.nib */; };
 		C29E01FC0546DBE700B0215B /* RegistrationSplash.nib in Resources */ = {isa = PBXBuildFile; fileRef = C27BE7D0053EC3F9000001C9 /* RegistrationSplash.nib */; };
@@ -188,7 +186,6 @@
 		C22C5ADB04F1702A00A800F6 /* changelog */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = changelog; sourceTree = "<group>"; };
 		C22FFE1D0438D8B100D0BAF5 /* Language Reference */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Language Reference"; sourceTree = "<group>"; };
 		C243A19F05380D95000001C9 /* Creatures.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Creatures.png; sourceTree = "<group>"; };
-		C243A1A105380DAA000001C9 /* Creatures.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Creatures.png; sourceTree = "<group>"; };
 		C243A1A405381585000001C9 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/ErrorPanel.nib; sourceTree = "<group>"; };
 		C243A1A60538185A000001C9 /* ErrorPanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ErrorPanelController.h; sourceTree = "<group>"; };
 		C243A1A70538185A000001C9 /* ErrorPanelController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ErrorPanelController.m; sourceTree = "<group>"; };
@@ -225,7 +222,6 @@
 		C27E7B1104E2914F00A800F6 /* Debug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Debug.h; sourceTree = "<group>"; };
 		C27E7B1204E2914F00A800F6 /* Debug.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Debug.m; sourceTree = "<group>"; };
 		C27E7B1504E2B5A200A800F6 /* Creatures_Prefix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Creatures_Prefix.h; sourceTree = "<group>"; };
-		C27E7B1C04E3E22C00A800F6 /* index.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = index.html; sourceTree = "<group>"; };
 		C280144B056D74C600A1C266 /* MANSDataAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MANSDataAdditions.h; sourceTree = "<group>"; };
 		C280144C056D74C600A1C266 /* MANSDataAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MANSDataAdditions.m; sourceTree = "<group>"; };
 		C2846CBE0470AA0800000102 /* Guide.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Guide.txt; sourceTree = "<group>"; };
@@ -583,14 +579,6 @@
 			path = MAKeyedArchiver;
 			sourceTree = "<group>";
 		};
-		C27E7B1B04E3E20700A800F6 /* beta */ = {
-			isa = PBXGroup;
-			children = (
-				C27E7B1C04E3E22C00A800F6 /* index.html */,
-			);
-			path = beta;
-			sourceTree = "<group>";
-		};
 		C28FACF504DBB59200A800F6 /* Help */ = {
 			isa = PBXGroup;
 			children = (
@@ -613,8 +601,7 @@
 		C28FAD0A04DBECD400A800F6 /* Web Site */ = {
 			isa = PBXGroup;
 			children = (
-				C27E7B1B04E3E20700A800F6 /* beta */,
-				C243A1A105380DAA000001C9 /* Creatures.png */,
+				C243A19F05380D95000001C9 /* Creatures.png */,
 				C28FAD0B04DBED0600A800F6 /* index.html */,
 				C28FAD0D04DBED2100A800F6 /* screenshot.png */,
 			);
@@ -800,11 +787,9 @@
 				C29E01F00546DBE700B0215B /* help_language_reference.html in Resources */,
 				C29E01F10546DBE700B0215B /* index.html in Resources */,
 				C29E01F20546DBE700B0215B /* screenshot.png in Resources */,
-				C29E01F30546DBE700B0215B /* index.html in Resources */,
 				C29E01F40546DBE700B0215B /* Creatures.icns in Resources */,
 				C29E01F50546DBE700B0215B /* creatureinspectorwindow.png in Resources */,
 				C29E01F60546DBE700B0215B /* Creatures.png in Resources */,
-				C29E01F70546DBE700B0215B /* Creatures.png in Resources */,
 				C29E01F80546DBE700B0215B /* ErrorPanel.nib in Resources */,
 				C29E01FB0546DBE700B0215B /* EnterRegistration.nib in Resources */,
 				C29E01FC0546DBE700B0215B /* RegistrationSplash.nib in Resources */,

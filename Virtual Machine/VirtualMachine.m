@@ -8,6 +8,7 @@
 
 #import "VirtualMachine.h"
 #import "VirtualMachineAssembler.h"
+#import <CoreFoundation/CFByteOrder.h>
 
 
 int getRawBigFromInst( VMInstruction inst )

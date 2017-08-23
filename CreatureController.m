@@ -195,6 +195,9 @@ NSString * const CreatureNewArenaCreatedNotification = @"CreatureNewArenaCreated
 
 	[FamilyTreeWindowController reset];
 	
+	// Select inspect tool after loading a file.
+	[self changeTool:3];
+	
 	return YES;
 }
 
@@ -424,12 +427,20 @@ NSString * const CreatureNewArenaCreatedNotification = @"CreatureNewArenaCreated
 	[sp setRequiredFileType:@"creatures"];
 
 	/* display the NSSavePanel */
-	NSString *oldFilename;
+	NSString *oldDirectory = nil;
+	NSString *oldFilename = @"";
 	if(hasBeenSaved)
+	{
 		oldFilename = [[view window] representedFilename];
-	else
-		oldFilename = @"";
-	runResult = [sp runModalForDirectory:nil file:oldFilename];
+		NSRange range = [oldFilename rangeOfString:@"/" options:NSBackwardsSearch];
+		if( range.location != NSNotFound )
+		{
+			oldDirectory = [oldFilename substringToIndex:range.location];
+			oldFilename = [oldFilename substringFromIndex:range.location+1];
+		}
+	}
+	
+	runResult = [sp runModalForDirectory:oldDirectory file:oldFilename];
 
 	/* if successful, save file under designated name */
 	if (runResult == NSOKButton) {
@@ -577,6 +588,9 @@ NSString * const CreatureNewArenaCreatedNotification = @"CreatureNewArenaCreated
 	[view setNeedsDisplay:YES];
 	step = 0;
 	[self update];
+	
+	// Select square tool after creating a new arena.
+	[self changeTool:2];
 }
 
 - (IBAction)save:sender
@@ -663,6 +677,13 @@ NSString * const CreatureNewArenaCreatedNotification = @"CreatureNewArenaCreated
 	}
 	if([tool respondsToSelector:@selector(selected:)])
 		[tool selected:nil];
+}
+
+
+- (void)changeTool:(int)index
+{
+	[toolSelectMatrix selectCellAtRow:0 column:index];
+	[self toolChanged:nil];
 }
 
 

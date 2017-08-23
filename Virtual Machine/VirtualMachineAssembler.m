@@ -9,6 +9,7 @@
 #import "VirtualMachineAssembler.h"
 #import "VirtualMachine.h"
 #import "VirtualMachineError.h"
+#import <CoreFoundation/CFByteOrder.h>
 
 
 @interface AssemblerLabelReference : NSObject {

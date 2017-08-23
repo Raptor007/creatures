@@ -26,7 +26,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Creatures</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Creatures 1.1.1, Copyright 2003 Michael Ash</string>
+	<string>Creatures 1.1.2, Copyright 2003 Michael Ash</string>
 	<key>CFBundleIconFile</key>
 	<string>Creatures.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -38,11 +38,11 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>Creatures 1.1.1</string>
+	<string>Creatures 1.1.2</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.1.1</string>
+	<string>1.1.2</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

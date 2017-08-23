@@ -8,6 +8,7 @@
 
 #import "GenomeLibrary.h"
 #import "Genome.h"
+#import <CoreFoundation/CFByteOrder.h>
 
 
 @interface GenomeLibrary (Private)
@@ -32,8 +33,10 @@
 
 - initFromDefaults
 {
-	// Commented out because unarchiveObjectWithData sometimes hangs in release builds!
-	/*
+#ifdef __LITTLE_ENDIAN__
+	// Because unarchiveObjectWithData sometimes hangs here in Intel release builds.
+	library = [[NSMutableSet alloc] init];
+#else
 	NSData *libraryData = [[NSUserDefaults standardUserDefaults] objectForKey:@"GenomeLibrary"];
 	if(libraryData)
 	{
@@ -44,8 +47,7 @@
 	{
 		library = [[NSMutableSet alloc] init];
 	}
-	*/
-	library = [[NSMutableSet alloc] init];
+#endif
 	return self;
 }
 

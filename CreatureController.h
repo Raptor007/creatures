@@ -106,6 +106,7 @@ extern NSString * const CreatureNewArenaCreatedNotification;
 - (IBAction)registrationInfo:sender;
 
 - (IBAction)toolChanged:sender;
+- (void)changeTool:(int)index;
 
 - (IBAction)openArenaSettingsWindow:sender;
 - (IBAction)mutationRateChanged:sender;

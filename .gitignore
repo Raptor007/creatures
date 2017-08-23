@@ -7,5 +7,6 @@
 *.perspectivev3
 *.pbxuser
 *.xcuserstate
+*.mode2
 *.o
 build

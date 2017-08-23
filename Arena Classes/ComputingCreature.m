@@ -354,7 +354,7 @@ static float directionYArray[] =
 	x += directionXArray[moveDirection];
 	y += directionYArray[moveDirection];
 	
-	if(newCreature)
+	//if(newCreature)
 	{
 		int spawnMask = [arena spawnMask];
 		if(spawnMask & kSpawnMating)
