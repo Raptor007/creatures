@@ -8,5 +8,7 @@
 *.pbxuser
 *.xcuserstate
 *.mode2
+project.xcworkspace
+xcuserdata
 *.o
 build
