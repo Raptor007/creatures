@@ -1006,6 +1006,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				PRODUCT_NAME = Creatures;
 				SECTORDER_FLAGS = "";
+				VALID_ARCHS = "ppc i386 x86_64";
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = NO;
@@ -1033,6 +1034,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				PRODUCT_NAME = Creatures;
 				SECTORDER_FLAGS = "";
+				VALID_ARCHS = "ppc i386 x86_64";
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 				ZERO_LINK = NO;
@@ -1057,6 +1059,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
 				PRODUCT_NAME = Creatures;
 				SECTORDER_FLAGS = "";
+				VALID_ARCHS = "ppc i386 x86_64";
 				WARNING_CFLAGS = "-Wall";
 				WRAPPER_EXTENSION = app;
 			};
