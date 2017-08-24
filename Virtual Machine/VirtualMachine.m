@@ -385,7 +385,7 @@ VMInstruction getInstFromRawBig( int rawBig )
 #endif
 	
 	unsigned templen;
-	const unsigned int *temp = (const void*)[coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen];
+	int *temp = (void *)[coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen];
 
 	if(memory)
 		free(memory);
@@ -404,7 +404,7 @@ VMInstruction getInstFromRawBig( int rawBig )
 	PC = [coder decodeIntForKey:@"PC"];
 
 	int rlen;
-	int *rtemp = (const void*)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
+	int *rtemp = (void *)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
 	if(sizeof(r) < rlen)
 		rlen = sizeof(r);
 
