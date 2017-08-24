@@ -403,7 +403,7 @@ VMInstruction getInstFromRawBig( int rawBig )
 
 	PC = [coder decodeIntForKey:@"PC"];
 
-	int rlen;
+	unsigned rlen;
 	int *rtemp = (void *)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
 	if(sizeof(r) < rlen)
 		rlen = sizeof(r);
