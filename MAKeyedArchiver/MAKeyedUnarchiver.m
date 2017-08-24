@@ -250,6 +250,7 @@
 		
 		int classTableOffset = CFSwapInt32BigToHost(*((int *)([archive bytes])));
 		int stringTableOffset = CFSwapInt32BigToHost(*((int *)([archive bytes] + 4)));
+		int offset;
 		
 		if(classTableOffset >= [archive length] || stringTableOffset >= [archive length])
 		{
@@ -258,7 +259,7 @@
 		
 		
 		// load the string table first, we need it to make the class table
-		int offset = stringTableOffset;
+		offset = stringTableOffset;
 		while(offset < [archive length])
 		{
 			[stringTable addObject:[NSString stringWithUTF8String:[archive bytes] + offset]];

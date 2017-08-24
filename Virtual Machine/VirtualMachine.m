@@ -246,18 +246,18 @@ VMInstruction getInstFromRawBig( int rawBig )
 				}
 
 				if(inst.opcode == opLoad)
-					#ifdef __LITTLE_ENDIAN__
-						_r[(inst.reg % VM_NUM_REGS)] = CFSwapInt32BigToHost(getRawBigFromInst( _memory[location] ));
-					#else
-						_r[(inst.reg % VM_NUM_REGS)] = _memory[location].raw;
-					#endif
+#ifdef __LITTLE_ENDIAN__
+					_r[(inst.reg % VM_NUM_REGS)] = CFSwapInt32BigToHost(getRawBigFromInst( _memory[location] ));
+#else
+					_r[(inst.reg % VM_NUM_REGS)] = _memory[location].raw;
+#endif
 
 				else if(inst.opcode == opStore)
-					#ifdef __LITTLE_ENDIAN__
-						_memory[location] = getInstFromRawBig(CFSwapInt32HostToBig( _r[(inst.reg % VM_NUM_REGS)] ));
-					#else
-						_memory[location].raw = _r[(inst.reg % VM_NUM_REGS)];
-					#endif
+#ifdef __LITTLE_ENDIAN__
+					_memory[location] = getInstFromRawBig(CFSwapInt32HostToBig( _r[(inst.reg % VM_NUM_REGS)] ));
+#else
+					_memory[location].raw = _r[(inst.reg % VM_NUM_REGS)];
+#endif
 
 				else
 				{
@@ -384,8 +384,7 @@ VMInstruction getInstFromRawBig( int rawBig )
 	notifyIMP = [notifyObject methodForSelector:notifySEL];
 #endif
 	
-	unsigned int templen = 0;
-	//const VMInstruction *temp = [coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen bytesPerItem:sizeof(VMInstruction)];
+	unsigned templen;
 	const unsigned int *temp = (const void*)[coder decodeBytesForKey:@"memoryBytes" returnedLength:&templen];
 
 	if(memory)
@@ -393,26 +392,29 @@ VMInstruction getInstFromRawBig( int rawBig )
 	memory = malloc(templen);
 	memlength = templen/sizeof(VMInstruction);
 
-	size_t i = 0;
 #ifdef __LITTLE_ENDIAN__
 	// Load from big-endian bit packing.
+	size_t i = 0;
 	for( ; i < memlength; i ++ )
 		memory[ i ] = getInstFromRawBig( temp[ i ] );
 #else
-	memcpy( memory, temp, templen );
+	memcpy(memory, temp, templen);
 #endif
 
 	PC = [coder decodeIntForKey:@"PC"];
 
 	unsigned int rlen = 0;
-	//const int *rtemp = [coder decodeBytesForKey:@"rbytes" returnedLength:&rlen bytesPerItem:sizeof(int)];
 	const int *rtemp = (const void*)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
 
 	if(sizeof(r) < rlen)
 		rlen = sizeof(r);
-	//memcpy(r, rtemp, rlen);
+
+#ifdef __LITTLE_ENDIAN__
 	for( i = 0; i < rlen / sizeof(int); i ++ )
 		r[ i ] = CFSwapInt32BigToHost( rtemp[ i ] );
+#else
+	memcpy(r, rtemp, rlen);
+#endif
 
 	return self;
 }

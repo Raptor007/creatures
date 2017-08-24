@@ -4,11 +4,9 @@ Universal binary, with some tricks on Intel to make sure VM arithmetic acts like
 
 Fixed speed control values from 1:1 to 32:1, which seemed to be unbounded on fast CPUs.
 
-Assembler now correctly checks the LdI value range.
-
 Fixed the "Save As" filename and default directory when re-saving.
 
-Fixed a couple issues with resource files having the same name.
+Fixed a couple issues with app resource files having the same name.
 
 Automatically select square tool when making a new arena, and inspect tool after loading an arena.
 

@@ -143,7 +143,7 @@ static NSString *trapStrings[] = {
 			if(inst.load.op_is_address)
 				return [NSString stringWithFormat:@"%@\t%d", str, inst.load.addr];
 			else
-				return [NSString stringWithFormat:@"%@\tr%d", str, (inst.load.addr & VM_REG_MASK)];
+				return [NSString stringWithFormat:@"%@\tr%d", str, inst.load.addr & VM_REG_MASK];
 			break;
 		}
 		case opJumpEQZ:
@@ -159,7 +159,7 @@ static NSString *trapStrings[] = {
 			if(inst.load.op_is_address)
 				return [NSString stringWithFormat:@"%@\t%d", str, inst.load.addr];
 			else
-				return [NSString stringWithFormat:@"%@\tr%d", str, (inst.load.addr & VM_REG_MASK)];
+				return [NSString stringWithFormat:@"%@\tr%d", str, inst.load.addr & VM_REG_MASK];
 			break;
 		}
 		case opJump:
@@ -172,7 +172,7 @@ static NSString *trapStrings[] = {
 			if(inst.load.op_is_address)
 				return [NSString stringWithFormat:@"%@\t%d", str, inst.load.addr];
 			else
-				return [NSString stringWithFormat:@"%@\tr%d", str, (inst.load.addr & VM_REG_MASK)];
+				return [NSString stringWithFormat:@"%@\tr%d", str, inst.load.addr & VM_REG_MASK];
 			break;
 		}
 		case opLoadi:
@@ -758,6 +758,7 @@ static NSString *trapStrings[] = {
 		/*
 		 --------------- special opcode end -------------
 		 */
+		
 		
 		else
 		{

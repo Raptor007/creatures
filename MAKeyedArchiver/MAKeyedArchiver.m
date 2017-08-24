@@ -280,12 +280,6 @@ int LengthOfType(const char *type)
 
 - (void)encodeBool:(BOOL)arg forKey:(NSString *)key
 {
-#ifdef __LITTLE_ENDIAN__
-	if( sizeof(BOOL) == 4 )
-		arg = CFSwapInt32HostToBig(arg);
-	else if( sizeof(BOOL) == 8 )
-		arg = CFSwapInt64HostToBig(arg);
-#endif
 	ENCODE_BODY;
 }
 
@@ -429,7 +423,6 @@ int LengthOfType(const char *type)
 		else
 			[obj encodeWithCoder:self]; // encode *everything*, whee
 		
-		//int minusOne = CFSwapInt32HostToBig(-1);
 		[archive appendBytes:&minusOne length:sizeof(minusOne)]; // end with minus one
 	}
 	
