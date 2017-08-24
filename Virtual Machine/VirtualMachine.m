@@ -403,9 +403,8 @@ VMInstruction getInstFromRawBig( int rawBig )
 
 	PC = [coder decodeIntForKey:@"PC"];
 
-	unsigned int rlen = 0;
-	const int *rtemp = (const void*)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
-
+	int rlen;
+	int *rtemp = (const void*)[coder decodeBytesForKey:@"rbytes" returnedLength:&rlen];
 	if(sizeof(r) < rlen)
 		rlen = sizeof(r);
 

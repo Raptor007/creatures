@@ -197,11 +197,11 @@ static NSString *trapStrings[] = {
 			return [NSString stringWithFormat:@"%@\tr%d", opString, inst.special.reg];
 			break;
 		default:
-			#ifdef __LITTLE_ENDIAN__
-				return [NSString stringWithFormat:@"%@\t%d", opString, CFSwapInt32BigToHost(getRawBigFromInst(inst))];
-			#else
-				return [NSString stringWithFormat:@"%@\t%d", opString, inst.raw];
-			#endif
+#ifdef __LITTLE_ENDIAN__
+			return [NSString stringWithFormat:@"%@\t%d", opString, CFSwapInt32BigToHost(getRawBigFromInst(inst))];
+#else
+			return [NSString stringWithFormat:@"%@\t%d", opString, inst.raw];
+#endif
 			break;
 	}
 }
@@ -482,11 +482,11 @@ static NSString *trapStrings[] = {
 			if(token == nil)
 				curLineInstruction.loadi.opcode = opNop;
 			else
-				#ifdef __LITTLE_ENDIAN__
-					curLineInstruction = getInstFromRawBig(CFSwapInt32HostToBig([self convertToNumber:token]));
-				#else
-					curLineInstruction.raw = [self convertToNumber:token];
-				#endif
+#ifdef __LITTLE_ENDIAN__
+				curLineInstruction = getInstFromRawBig(CFSwapInt32HostToBig([self convertToNumber:token]));
+#else
+				curLineInstruction.raw = [self convertToNumber:token];
+#endif
 		}
 
 

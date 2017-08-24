@@ -431,7 +431,7 @@ int LengthOfType(const char *type)
 	while(![delayedEncodesTable isEmpty])
 	{
 		ObjectOffsetPair pair = [delayedEncodesTable pop];
-		unsigned int *pointer = [archive mutableBytes] + pair.offset;
+		int *pointer = [archive mutableBytes] + pair.offset;
 		if(*pointer != 0 && CFSwapInt32BigToHost(*pointer) != 0xdeadbeef) // these are the only two pre-existing values it can have
 		{
 			MyErrorLog(@"MAKeyedArchiver internal consistency failure; while writing a delayed object, an unexpected value was encountered at the write location");
@@ -443,19 +443,19 @@ int LengthOfType(const char *type)
 	NSEnumerator *enumerator;
 	NSString *str;
 
-	unsigned int *classTableOffset = [archive mutableBytes];
+	int *classTableOffset = [archive mutableBytes];
 	*classTableOffset = CFSwapInt32HostToBig([archive length]);
 	
 	enumerator = [[classTable strings] objectEnumerator];
 	while((str = [enumerator nextObject]))
 	{
-		unsigned int nameIndex = CFSwapInt32HostToBig([stringTable indexOfString:str]);
+		int nameIndex = CFSwapInt32HostToBig([stringTable indexOfString:str]);
 		int version = CFSwapInt32HostToBig([NSClassFromString(str) version]);
 		[archive appendBytes:&nameIndex length:sizeof(nameIndex)];
 		[archive appendBytes:&version length:sizeof(version)];
 	}
 
-	unsigned int *stringTableOffset = [archive mutableBytes] + 4;
+	int *stringTableOffset = [archive mutableBytes] + 4;
 	*stringTableOffset = CFSwapInt32HostToBig([archive length]);
 	
 	enumerator = [[stringTable strings] objectEnumerator];
@@ -468,7 +468,7 @@ int LengthOfType(const char *type)
 	NSData *compressedData = [archive zlibCompressed];
 	NSMutableData *returnData = [NSMutableData dataWithLength:MD5_DIGEST_LENGTH + 4];
 	// save magic cookie
-	unsigned int *magicCookieOffset = [returnData mutableBytes] + MD5_DIGEST_LENGTH;
+	int *magicCookieOffset = [returnData mutableBytes] + MD5_DIGEST_LENGTH;
 	*magicCookieOffset = CFSwapInt32HostToBig('MAkA');
 	
 	// save MD5
