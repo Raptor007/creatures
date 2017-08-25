@@ -8,7 +8,6 @@
 
 #import "GenomeLibrary.h"
 #import "Genome.h"
-#import <CoreFoundation/CFByteOrder.h>
 
 
 @interface GenomeLibrary (Private)
